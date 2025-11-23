@@ -4,74 +4,109 @@ const ctx = canvas.getContext("2d");
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
+let score = 0;
+let speed = 6;
+let lanes = 4;
+
+const scoreBox = document.getElementById("scoreBox");
+
+// Ayam (player)
 let chicken = {
     x: canvas.width / 2,
-    y: canvas.height - 120,
-    size: 40,
-    color: "yellow"
+    y: canvas.height - 140,
+    size: 45,
+    color: "#ffeb3b"
 };
 
+// Mobil
 let cars = [];
-let score = 0;
-let speed = 4;
 
-// Spawn mobil
+// Spawn mobil tiap detik
 setInterval(() => {
+    const laneWidth = canvas.width / lanes;
+
     cars.push({
-        x: Math.random() * canvas.width,
-        y: -50,
-        width: 50,
-        height: 80,
-        color: "red"
+        lane: Math.floor(Math.random() * lanes),
+        x: 0,
+        y: -80,
+        width: laneWidth * 0.7,
+        height: 100,
+        color: randomColor()
     });
-}, 700);
+}, 600);
 
-// Kontrol geser (Android touch)
-let touchX = null;
+function randomColor() {
+    const colors = ["#ff5252", "#40c4ff", "#ffd740", "#69f0ae", "#ff4081"];
+    return colors[Math.floor(Math.random() * colors.length)];
+}
 
-canvas.addEventListener("touchstart", e => {
-    touchX = e.touches[0].clientX;
+// Touch control (Android)
+let lastTouchX = null;
+
+canvas.addEventListener("touchstart", (e) => {
+    lastTouchX = e.touches[0].clientX;
 });
 
-canvas.addEventListener("touchmove", e => {
-    const current = e.touches[0].clientX;
-    if (touchX === null) return;
+canvas.addEventListener("touchmove", (e) => {
+    const touchX = e.touches[0].clientX;
+    if (lastTouchX === null) return;
 
-    const diff = current - touchX;
-
-    chicken.x += diff * 0.3;
-    touchX = current;
+    const diff = touchX - lastTouchX;
+    chicken.x += diff * 0.4;
+    lastTouchX = touchX;
 });
 
+// Draw lane lines
+function drawRoad() {
+    const laneWidth = canvas.width / lanes;
+
+    for (let i = 1; i < lanes; i++) {
+        ctx.strokeStyle = "rgba(255,255,255,0.2)";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(laneWidth * i, 0);
+        ctx.lineTo(laneWidth * i, canvas.height);
+        ctx.stroke();
+    }
+}
+
+// Render game
 function update() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    drawRoad();
+
     // Gambar ayam
     ctx.fillStyle = chicken.color;
-    ctx.fillRect(chicken.x, chicken.y, chicken.size, chicken.size);
+    ctx.beginPath();
+    ctx.arc(chicken.x, chicken.y, chicken.size / 2, 0, Math.PI * 2);
+    ctx.fill();
 
-    // Gambar & gerakkan mobil
+    // Gerakan & gambar mobil
     cars.forEach((car, i) => {
+        const laneWidth = canvas.width / lanes;
+        car.x = (car.lane * laneWidth) + laneWidth * 0.15;
         car.y += speed;
 
         ctx.fillStyle = car.color;
         ctx.fillRect(car.x, car.y, car.width, car.height);
 
-        // Jika nabrak
+        // Cek tabrakan
         if (
-            chicken.x < car.x + car.width &&
-            chicken.x + chicken.size > car.x &&
-            chicken.y < car.y + car.height &&
-            chicken.y + chicken.size > car.y
+            chicken.x + chicken.size / 2 > car.x &&
+            chicken.x - chicken.size / 2 < car.x + car.width &&
+            chicken.y + chicken.size / 2 > car.y &&
+            chicken.y - chicken.size / 2 < car.y + car.height
         ) {
-            alert("Game Over! Score: " + score);
+            alert("💀 Game Over!\nScore kamu: " + score);
             location.reload();
         }
 
-        // Score & hapus mobil yang lewat
+        // Delete mobil yg lewat + tambah score
         if (car.y > canvas.height) {
             cars.splice(i, 1);
             score++;
+            scoreBox.textContent = "Score: " + score;
         }
     });
 
