@@ -1,12 +1,25 @@
 body {
     margin: 0;
-    background: #222;
+    background: linear-gradient(#2d2d2d, #1d1d1d);
+    font-family: Arial, sans-serif;
     overflow: hidden;
+}
+
+#scoreBox {
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    background: rgba(0,0,0,0.5);
+    padding: 8px 14px;
+    color: #fff;
+    font-size: 20px;
+    border-radius: 8px;
+    z-index: 10;
+    letter-spacing: 1px;
 }
 
 canvas {
     display: block;
-    background: #444;
     width: 100vw;
     height: 100vh;
 }
